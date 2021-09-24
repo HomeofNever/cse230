@@ -12,21 +12,48 @@ let INC   = \n f x -> f (n f x)
 let ADD   = \n m -> n INC m
 let MUL   = \n m -> n (ADD m) ZERO
 
-
 -------------------------------------------------------------------------------
 -- YOU SHOULD ONLY MODIFY THE TEXT BELOW, JUST THE PARTS MARKED AS COMMENTS
 -------------------------------------------------------------------------------
 eval suc_one :
   INC ONE
-  -- (a) fill in your reductions here
+  =d> (\n f x -> f (n f x)) ONE
+  =b> (\f x -> f (ONE f x))
+  =d> (\f x -> f ((\f x -> f x) f x))
+  =a> (\f x -> f ((\a x -> a x) f x))
+  =a> (\f x -> f ((\a b -> a b) f x))
+  =b> (\f x -> f ((\b -> f b) x))
+  =b> (\f x -> f (f x))
   =d> TWO
 
 eval add_zero_zero :
   ADD ZERO ZERO
-  -- (b) fill in your reductions here
-  =d> ZERO
+  =d> (\n m -> n INC m) ZERO ZERO
+  =b> (\m -> ZERO INC m) ZERO
+  =b> ZERO INC ZERO
+  =d> (\f x -> x) INC ZERO
+  =b> (\x -> x) ZERO
+  =b> ZERO
 
 eval add_two_two :
   ADD TWO TWO
-  -- (c) fill in your reductions here
+  =d> (\n m -> n INC m) TWO TWO
+  =b> (\m -> TWO INC m) TWO
+  =b> TWO INC TWO
+  =d> (\f x -> f (f x)) INC TWO
+  =b> (\x -> INC (INC x)) TWO
+  =b> INC (INC TWO)
+  =d> INC ((\n f x -> f (n f x)) TWO)
+  =b> INC (\f x -> f (TWO f x))
+  =d> INC (\f x -> f ((\f x -> f (f x)) f x))
+  =a> INC (\f x -> f ((\a x -> a (a x)) f x))
+  =a> INC (\f x -> f ((\a b -> a (a b)) f x))
+  =b> INC (\f x -> f ((\b -> f (f b)) x ))
+  =b> INC (\f x -> f (f (f x)))
+  =d> (\n f x -> f (n f x)) (\f x -> f (f (f x)))
+  =a> (\n f x -> f (n f x)) (\a x -> a (a (a x)))
+  =a> (\n f x -> f (n f x)) (\a b -> a (a (a b)))
+  =b> (\f x -> f ((\a b -> a (a (a b))) f x))
+  =b> (\f x -> f ((\b -> f (f (f b))) x))
+  =b> (\f x -> f (f (f (f x))))
   =d> FOUR
