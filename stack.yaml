@@ -1,12 +1,11 @@
-flags: {}
-extra-package-dbs: []
-
+resolver: lts-16.8
+compiler: ghc-8.10.2
+allow-newer: true
 packages:
 - '.' 
-
 extra-deps:
 - dequeue-0.1.12
 - clock-0.7.2
 - elsa-0.2.1.1 
+- json-0.10
 
-resolver: lts-14.12

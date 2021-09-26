@@ -1,6 +1,14 @@
 # Assignment 0: Lambda Calculus (140 points)
 
-**Due by Friday 1/17/20 23:59:59**
+## To run on the ieng6 lab machines
+
+1. Set the correct `Makefile`
+
+```sh
+$ cp Makefile.cab Makefile
+```
+
+2. Edit
 
 ## Overview : Lambda Calculus
 

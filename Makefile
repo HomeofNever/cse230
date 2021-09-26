@@ -12,3 +12,7 @@ upstream:
 
 update:
 	git pull upstream master
+
+turnin:
+	git commit -a -m "turnin"
+	git push origin master

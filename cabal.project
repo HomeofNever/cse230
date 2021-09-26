@@ -1,0 +1,5 @@
+packages:
+  hw0-lambda.cabal
+
+store-dir: /software/CSE/cs230fa21/.cabal/store
+

@@ -15,10 +15,10 @@ let
 in pkgs.mkShell {
   buildInputs = with pkgs; [
     bash
-    vscodium
     vim
 
     ghc
+    haskellPackages.stack
     haskellPackages.elsa # Bring marked as broken, but usable. Probably elsa's test cases?
    
     nixStable
@@ -30,5 +30,6 @@ in pkgs.mkShell {
     # Before run command
     echo 'CSE230 - Course Env - Elsa'
     echo 'Use `elsa file` to exec'
+    echo 'check makefile for more info'
   '';
 }
