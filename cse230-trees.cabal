@@ -1,0 +1,74 @@
+name:                cse230-trees
+version:             0.1.0.0
+synopsis:            Starter code 
+license:             MIT
+license-file:        LICENSE
+author:              Ranjit Jhala
+maintainer:          jhala@cs.ucsd.edu
+category:            Language
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+
+Library
+  ghc-options:        -W
+  exposed-modules:    CSE230.Shift,
+                      CSE230.Graphics,
+                      CSE230.List,
+                      CSE230.Shapes,
+                      CSE230.Doc,
+                      CSE230.Directory 
+
+  Default-Extensions: OverloadedStrings
+
+  -- other-extensions:
+  build-depends:       base,
+                       filepath,
+                       directory,
+                       QuickCheck,
+                       gloss,
+                       gloss-export,
+                       JuicyPixels,
+                       htdp-image
+
+  hs-source-dirs:      src
+  if os(darwin)
+    hs-source-dirs: platform/mac 
+  if !os(darwin)
+    hs-source-dirs: platform/linux
+
+  default-language:    Haskell2010
+
+executable htree
+  build-depends:       base, 
+                       filepath,
+                       directory,
+                       QuickCheck,
+                       JuicyPixels,
+                       gloss,
+                       gloss-export,
+                       htdp-image,
+                       bmp,
+                       cse230-trees
+
+  default-language:    Haskell2010
+  main-is:             src/Main.hs
+  Default-Extensions: OverloadedStrings
+
+test-suite test
+  default-language: Haskell98
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  Default-Extensions: OverloadedStrings
+  main-is:          Test.hs
+  build-depends:    base,
+                    filepath,
+                    directory,
+                    QuickCheck,
+                    tasty,
+                    tasty-hunit,
+                    tasty-quickcheck,
+                    process,
+                    cse230-trees
+  other-modules:    Common 
