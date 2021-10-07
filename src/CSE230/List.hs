@@ -13,8 +13,8 @@ import Prelude hiding (maximum)
 
 clone :: Int -> a -> [a]
 clone n x 
-  | n <= 0    = error "fill this in"
-  | otherwise = error "fill this in"
+  | n <= 0    = []
+  | otherwise = x : clone (n - 1) x
 
 -------------------------------------------------------------------------------
 -- | Padding a List
@@ -35,7 +35,12 @@ data Dir = DirL | DirR
 -- [1,2,3,4,5]
 
 pad :: Dir -> Int -> a -> [a] -> [a]
-pad dir n x ys = error "fill this in"
+pad dir n x ys = case dir of 
+  DirL -> clone (listDiff ys n) x ++ ys
+  DirR -> ys ++ clone (listDiff ys n) x 
+
+listDiff :: [a] -> Int -> Int
+listDiff l n = max (length l - n) 0 
 
 
 -------------------------------------------------------------------------------
@@ -49,9 +54,11 @@ pad dir n x ys = error "fill this in"
 -- True
 --
 isSubSequence :: (Eq a) => [a] -> [a] -> Bool
-isSubSequence []         _      = error "fill this in"
-isSubSequence _          []     = error "fill this in"
-isSubSequence xxs@(x:xs) (y:ys) = error "fill this in"
+isSubSequence []         _      = True
+isSubSequence _          []     = False 
+isSubSequence xxs@(x:xs) (y:ys) 
+  | x == y = isSubSequence xs ys
+  | otherwise = isSubSequence xxs ys
 
 -------------------------------------------------------------------------------
 -- | maximum 
@@ -65,8 +72,8 @@ isSubSequence xxs@(x:xs) (y:ys) = error "fill this in"
 maximum :: (Ord a) => a -> [a] -> a 
 maximum d xs = foldr f base xs  
   where 
-    base     = error "fill this in"
-    f        = error "fill this in"
+    base     = d
+    f        = max
 
 -------------------------------------------------------------------------------
 -- | intersperse
