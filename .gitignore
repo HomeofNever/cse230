@@ -53,3 +53,6 @@ css/
 /stack.yaml.lock
 /img/*.png
 /img/*.png
+
+*.ova
+.direnv
