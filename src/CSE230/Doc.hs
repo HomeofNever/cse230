@@ -107,7 +107,8 @@ height (D ls) = length ls
 --
 
 vcatL :: Doc -> Doc -> Doc
-vcatL d1 d2 = error "fill this in"
+vcatL d1 d2 = D ((docLines d1) ++ (docLines d2))
+    
 
 -------------------------------------------------------------------------------
 -- | Vertical Concatenation aligned at Right
@@ -121,7 +122,16 @@ vcatL d1 d2 = error "fill this in"
 --
 
 vcatR :: Doc -> Doc -> Doc
-vcatR d1 d2 = error "fill this in"
+vcatR d1 d2 = 
+  let 
+      len1 = width d1
+      len2 = width d2
+      diff = len1 - len2
+      padDoc = \doc len -> D $ map (\x -> pad DirL (len + (length x)) ' ' x) (docLines doc)
+  in
+    if diff < 0 then vcatL (padDoc d1 (- diff)) d2
+    else if diff > 0 then vcatL d1 (padDoc d2 diff)
+    else vcatL d1 d2
 
 -------------------------------------------------------------------------------
 -- | Horizontal Concatenation aligned at Top
@@ -141,7 +151,23 @@ vcatR d1 d2 = error "fill this in"
 -- <BLANKLINE>
 --
 hcatT :: Doc -> Doc -> Doc
-hcatT d1 d2 = error "fill this in"
+hcatT d1 d2 = 
+  let 
+    len = width d1
+    strPad = \x y -> (pad DirR len ' ' x) ++ y
+  in 
+    D $ losslessZipWith "" "" strPad (docLines d1) (docLines d2)
+
+-- >>> zipWith (+) [1,2,3] [1,2,3,4]
+-- [2,4,6]
+
+-- >>> losslessZipWith "l1" "l2" (++) ["1", "2", "3"] ["1", "2"]
+-- ["11","22","3l2"]
+--
+losslessZipWith :: a -> b -> (a -> b -> c) -> [a] -> [b] -> [c]
+losslessZipWith d1 d2 f (x:l1) (y:l2) = (f x y) : (losslessZipWith d1 d2 f l1 l2)
+losslessZipWith _ d2 f l1 [] = zipWith f l1 (repeat d2) 
+losslessZipWith d1 _ f [] l2 = zipWith f (repeat d1) l2
 
 elongate :: Dir -> Int -> Doc -> Doc
 elongate dir h (D ls) = D (pad dir h "" ls) 
@@ -163,7 +189,13 @@ elongate dir h (D ls) = D (pad dir h "" ls)
 -- <BLANKLINE>
 --
 hcatB :: Doc -> Doc -> Doc
-hcatB d1 d2 = error "fill this in"
+hcatB d1 d2 = 
+  let 
+    len1 = height d1
+    len2 = height d2
+    elo = \x y -> elongate DirL x y
+  in 
+    hcatT (elo len2 d1) (elo len1 d2)
 
 triangle :: Doc
 triangle = D 
@@ -200,7 +232,6 @@ triangles :: [Doc]
 triangles = [ triangle
             , triangle `hcatT` triangle
             , triangle `hcatT` triangle `hcatT` triangle ]
-
 
 -------------------------------------------------------------------------------
 -- | Properties of `Doc` combinators ------------------------------------------
