@@ -25,9 +25,19 @@ rainbow :: Image
 rainbow = foldr1 f xs
   where 
     xs  = map g [1..7] 
-    f   = error "fill this in"
-    g   = error "fill this in"
+    f   = overlay
+    g   = dwCircle 
 
+-- >>> dwCircle 1 red
+
+dwCircle :: Int -> Image
+dwCircle i = circle (fromIntegral i * 20) solid $ rainbowColor i
+
+-- >>> rainbowColor 6
+-- RGBA 1.0 0.5 0.0 1.0
+
+rainbowColor :: Int -> Color
+rainbowColor i = [red, orange, yellow, green, aquamarine, blue, violet] !! (7 - i)
 
 -------------------------------------------------------------------------------
 -- | ChessBoard with 'clone'
@@ -56,9 +66,8 @@ mkChess2   = save "img/chess2.png"   chessBoard2
 chessBoard2 :: Image 
 chessBoard2 = iter 2 f base
   where
-    f       = error "fill this in"
+    f       = (\i -> besides [aboves[i, i], aboves[i, i]])
     base    = gridSquare 
-
 
 -------------------------------------------------------------------------------
 -- | Sierpinski Triangle with recursion
@@ -71,7 +80,7 @@ sierpinskiTriangle1 = triRec 8
 
 triRec :: Int -> Image
 triRec 0 = blueTriangle
-triRec n = error "fill this in"
+triRec n = aboves [triRec (n - 1), (besides [triRec (n - 1), triRec (n - 1)])]
 
 blueTriangle :: Image
 blueTriangle = triangle 5 solid fgCol
@@ -85,9 +94,8 @@ mkTriangle2 = save "img/triangle2.png" sierpinskiTriangle2
 sierpinskiTriangle2 :: Image
 sierpinskiTriangle2 = iter 8 f base
  where
-   f               = error "fill this in"
+   f               = (\n -> aboves [n, (besides [n, n])])
    base            = blueTriangle 
-
 
 -------------------------------------------------------------------------------
 -- | Sierpinski Carpet with `iter`
@@ -98,9 +106,43 @@ mkCarpet   = save "img/carpet.png" sierpinskiCarpet
 sierpinskiCarpet :: Image
 sierpinskiCarpet = iter 4 f base 
   where 
-    f            = error "fill this in"
+    f            = singleSquare
     base         = blueSquare
 
 blueSquare :: Image
-blueSquare =  square 4 solid fgCol  
+blueSquare = square 4 solid fgCol  
 
+gapSize :: Float
+gapSize = 1
+
+singleSquare :: Image -> Image
+singleSquare img = 
+  let 
+    cp = carpetRow img False
+    cpGap = carpetRow img True
+    gap = carpetGap (width cp) gapSize
+  in aboves [ 
+              gap,
+              cp,
+              gap,
+              cpGap,
+              gap,
+              cp,
+              gap
+            ]
+
+carpetGap :: Float -> Float -> Image
+carpetGap w h = rectangle w h solid white
+
+carpetRow :: Image -> Bool -> Image
+carpetRow img shouldMiddleGap = do
+  let gap = carpetGap gapSize (height img) 
+  if shouldMiddleGap then
+    besides [ gap, img, gap, carpetGap (width img) (height img), gap, img, gap ]
+  else 
+    besides [ gap, img, gap, img, gap, img, gap ]
+
+-- singleSquare img = aboves [ 
+--                       besides [ img, img, img ],
+--                       overlay (aboveAlign high img (besides [ img, img, img ])) (aboveAlign low img (besides [ img, img, img ]))
+--                 ]

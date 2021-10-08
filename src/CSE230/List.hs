@@ -39,8 +39,14 @@ pad dir n x ys = case dir of
   DirL -> clone (listDiff ys n) x ++ ys
   DirR -> ys ++ clone (listDiff ys n) x 
 
+-- Helper function for pad
+-- >>> listDiff [1,2,3,4,5] 3 
+-- 0
+
+-- >>> listDiff [1,2,3,4,5] 10
+-- 5
 listDiff :: [a] -> Int -> Int
-listDiff l n = max (length l - n) 0 
+listDiff l n = max (n - (length l)) 0 
 
 
 -------------------------------------------------------------------------------
@@ -87,8 +93,8 @@ maximum d xs = foldr f base xs
 intersp :: a -> [a] -> [a]
 intersp s xs = foldr f base xs
   where 
-    base     = error "fill this in"
-    f x r    = error "fill this in"
+    base     = [s]
+    f x r    = [s] ++ [x] ++ r
 
 -------------------------------------------------------------------------------
 -- Higher Order: iter
@@ -97,5 +103,5 @@ intersp s xs = foldr f base xs
 -- 1024
 
 iter :: Int -> (a -> a) -> a -> a
-iter 0 _ x = error "fill this in"
-iter n f x = error "fill this in"
+iter 0 _ x = x
+iter n f x = iter (n - 1) f (f x)
