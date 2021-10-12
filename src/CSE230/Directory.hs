@@ -143,9 +143,31 @@ srcDir = Sub "src"
 -- <BLANKLINE>
 --
 dirDoc :: Dir FilePath -> Doc 
-dirDoc (Fil f)    = error "fill this in"
-dirDoc (Sub f ds) = error "fill this in"
+dirDoc (Fil f)    = doc f
+dirDoc (Sub f ds) = 
+  let 
+    currentDoc = dirDoc (Fil f)
+    currentHeight = length ds
+    innerDocPad = foldr vcatL empty $ map (\x -> dirDocHelper x currentHeight) $ zip [1..] ds 
+    innerDoc = foldr vcatL empty $ map dirDoc ds
+  in 
+    vcatL currentDoc $ hcatB innerDocPad innerDoc
+    
+    
+dirDocHelper :: (Int, Dir FilePath) -> Int -> Doc
+dirDocHelper (idx, (Fil _)) len = folderEnd $ idx == len
+dirDocHelper (idx, (Sub _ ds)) len = 
+  let 
+    innerDoc = map dirDoc ds
+    innerHeight = foldr (+) 0 (map height innerDoc)
+    paddedDoc = foldr vcatL empty (replicate innerHeight bar)
+  in 
+    vcatL (folderEnd (idx == len)) paddedDoc
 
+folderEnd :: Bool -> Doc
+folderEnd isLast 
+  | isLast = hcatT angle dash
+  | otherwise = hcatT stile dash
 
 -------------------------------------------------------------------------------
 -- | Some useful 'Doc's--------------------------------------------------------
@@ -180,25 +202,29 @@ foldDir f = go []
 -- | 'allFiles dir' returns a list of all the Files in 'dir'
 -------------------------------------------------------------------------------
 -- >>> allFiles example
--- ["LICENSE","README.md","cse230-tree.cabal","carpet.png","chess1.png","chess2.png","rainbow.png","triangle1.png","triangle2.png","Main.hs","Directory.hs","Doc.hs","Graphics.hs","List.hs","Shapes.hs","stack.yaml"]
+-- ["LICENSE","README.md","cse230-tree.cabal","carpet.png","chess1.png","chess2.png","rainbow.png","triangle1.png","triangle2.png","Directory.hs","Doc.hs","Graphics.hs","List.hs","Shapes.hs","Main.hs","stack.yaml"]
 
 allFiles :: Dir FilePath -> [FilePath]
 allFiles dir = reverse (foldDir f [] dir)
   where 
-      f      = error "fill this in"
-
-
+      f = go
+        where
+          go _ r (File a) = a:r
+          go _ r (SubDir _) = r
 -------------------------------------------------------------------------------
 -- | 'allDirs dir' returns a list of all the sub-directories in 'dir'
 -------------------------------------------------------------------------------
 --
 -- >>> allDirs example
--- [".","img","src","CSE230"]
+-- [".","out","src","CSE230"]
 
 allDirs :: Dir FilePath -> [FilePath]
 allDirs dir = reverse (foldDir f [] dir)
   where
-      f = error "fill this in"
+      f = go
+        where 
+          go _ r (File _) = r
+          go _ r (SubDir a) = a:r
 
 
 -------------------------------------------------------------------------------
@@ -207,12 +233,18 @@ allDirs dir = reverse (foldDir f [] dir)
 -------------------------------------------------------------------------------
 --
 -- >>> findFiles ".hs" example
--- ["./src/Main.hs","./src/CSE230/Directory.hs","./src/CSE230/Doc.hs","./src/CSE230/Graphics.hs","./src/CSE230/List.hs","./src/CSE230/Shapes.hs"]
+-- ["./src/CSE230/Directory.hs","./src/CSE230/Doc.hs","./src/CSE230/Graphics.hs","./src/CSE230/List.hs","./src/CSE230/Shapes.hs","./src/Main.hs"]
 --
 findFiles :: String -> Dir FilePath -> [FilePath]
 findFiles sub dir = reverse (foldDir f [] dir)
    where
-      f = error "fill this in"
+      f = go
+          where 
+            go stk r (File a) = 
+              if (isSubSequence sub a) then
+                (foldl (\x y -> y </> x) a stk) : r
+              else r
+            go _ r (SubDir _) = r
     
 
 -------------------------------------------------------------------------------
@@ -223,8 +255,24 @@ findFiles sub dir = reverse (foldDir f [] dir)
 -- Sub "src" [Sub "CSE230" [Fil "Directory.hs", Fil "Doc.hs", Fil "Graphics.hs", Fil "List.hs", Fil "Shapes.hs"],Fil "Main.hs"]
 --
 
+-- >>> listDirectory "./src/CSE230"
+-- ["Doc.hs","Graphics.hs","List.hs","Directory.hs","Shapes.hs"]
+--
+
 build :: FilePath -> IO (Dir FilePath)
-build path = error "fill this in"
+build path = build' [] path
+
+
+build' :: [FilePath] -> FilePath -> IO (Dir FilePath)
+build' stk ps =
+  let fullPath = (foldr (</>) ps stk) in do
+    isFile <- doesFileExist fullPath
+    if isFile then return $ Fil $ takeFileName ps
+    else do
+      ls <- listDirectory fullPath
+      lls <- mapM (\x -> build' (stk ++ [ps]) x) (L.sort ls)
+      return $ Sub ps $ lls
+
 
 lshow :: Doc -> [String]
 lshow = lines . show
