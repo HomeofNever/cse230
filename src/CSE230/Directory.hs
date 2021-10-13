@@ -160,9 +160,11 @@ dirDocHelper (idx, (Sub _ ds)) len =
   let 
     innerDoc = map dirDoc ds
     innerHeight = foldr (+) 0 (map height innerDoc)
-    paddedDoc = foldr vcatL empty (replicate innerHeight bar)
+    padPrefix = if isLast then (doc " ") else bar
+    paddedDoc = foldr vcatL empty (replicate innerHeight padPrefix)
+    isLast = idx == len
   in 
-    vcatL (folderEnd (idx == len)) paddedDoc
+    vcatL (folderEnd isLast) paddedDoc
 
 folderEnd :: Bool -> Doc
 folderEnd isLast 
