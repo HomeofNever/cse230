@@ -21,8 +21,8 @@ libraryFoldr = foldr
 myReverse :: [a] -> [a]
 myReverse xs = L.foldl f b xs
   where
-    f = error "fill this in"
-    b = error "fill this in"
+    f = \x y -> [y] ++ x
+    b = []
 
 
 -------------------------------------------------------------------------------
@@ -41,9 +41,9 @@ myReverse xs = L.foldl f b xs
 myFoldr :: (a -> b -> b) -> b -> [a] -> b
 myFoldr f b xs = libraryFoldl f' b' xs'
   where
-    f'         = error "fill this in"
-    b'         = error "fill this in"
-    xs'        = error "fill this in"
+    f'         = \x y -> f y x
+    b'         = b
+    xs'        = myReverse xs
 
 
 -------------------------------------------------------------------------------
@@ -58,11 +58,14 @@ myFoldr f b xs = libraryFoldl f' b' xs'
 myFoldl :: (a -> b -> a) -> a -> [b] -> a
 myFoldl f b xs = libraryFoldr f' b' xs'
   where
-    f'         = error "fill this in"
-    b'         = error "fill this in"
-    xs'        = error "fill this in"
+    f'         = \x y -> f y x
+    b'         = b
+    xs'        = myReverse xs
 
 -- | [Extra] Can you figure out why `whySoSlow` takes much longer than `whySoFast`?
+-- https://wiki.haskell.org/Performance/Strictness
+-- foldl' won't save the expression in thunk, reduce the overhead/heap size caused by laziness
+-- basically force complier to evaluate the expression because they will be evaluate anyway
 
 whySoSlow :: () -> Integer
 whySoSlow _ = L.foldl (+) 0 [1..1000000]
