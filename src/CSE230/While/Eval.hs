@@ -60,12 +60,12 @@ store0 = fromList [("X", H.IntVal 10),("Y", H.IntVal 20)]
 -- BoolVal False
 --
 
-
-
 eval :: H.Store -> H.Expression -> H.Value
-eval s (H.Var x)      = error "fill this in"
-eval s (H.Val v)      = error "fill this in"
-eval s (H.Op o e1 e2) = error "fill this in"
+eval s (H.Var x)      = case Data.Map.lookup x s of
+                        Just v -> v
+                        Nothing -> (H.IntVal 0)
+eval s (H.Val v)      = v
+eval s (H.Op o e1 e2) = semantics o (eval s e1) (eval s e2)
 
 semantics :: H.Bop -> H.Value -> H.Value -> H.Value
 semantics H.Plus   = intOp  (+)
@@ -104,11 +104,16 @@ boolOp _  _            _            = H.BoolVal False
 -}
 
 evalS :: H.Statement -> State H.Store ()
-evalS w@(H.While e s)    = error "fill this in"
-evalS H.Skip             = error "fill this in"
-evalS (H.Sequence s1 s2) = error "fill this in"
-evalS (H.Assign x e )    = error "fill this in"
-evalS (H.If e s1 s2)     = error "fill this in"
+evalS w@(H.While e s)    = evalE e >>= \res -> case res of 
+                                              H.BoolVal True -> evalS s >> evalS w
+                                              _ -> evalS H.Skip
+evalS H.Skip             = return ()
+evalS (H.Sequence s1 s2) = evalS s1 >> evalS s2
+evalS (H.Assign x e)    = evalE e >>= \res -> get >>= \store -> put $ Data.Map.insert x res store                  
+evalS (H.If e s1 s2)     = evalE e >>= \res -> case res of
+                                              H.BoolVal True -> evalS s1
+                                              H.BoolVal False -> evalS s2
+                                              _ -> evalS H.Skip
 
 
 -------------------------------------------------------------------------------
@@ -141,7 +146,7 @@ evalS (H.If e s1 s2)     = error "fill this in"
 
 
 execS :: H.Statement -> H.Store -> H.Store
-execS s = error "fill this in"
+execS s = execState $ evalS s
 
 -------------------------------------------------------------------------------
 -- | Running a Program 

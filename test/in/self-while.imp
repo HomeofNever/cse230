@@ -1,0 +1,4 @@
+while X > 1 do
+    F := Z + F;
+    X := X - 1
+endwhile

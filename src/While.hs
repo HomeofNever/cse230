@@ -5,5 +5,3 @@ main :: IO ()
 main = do 
   fs <- getArgs
   mapM_ runFile fs
-
-
