@@ -95,7 +95,13 @@ genBSTop  = frequency [(5, genBSTadd), (1, genBSTdel)]
 --   If `k` already exists in `t` then its value should be *replaced* with `v`. 
 ---------------------------------------------------------------------------------------------------
 bstInsert :: (Ord k) => k -> v -> BST k v -> BST k v
-bstInsert = error "fill this in"
+bstInsert newK newV (Bind k v l r) 
+  | newK == k = Bind k newV l r
+  | newK < k = Bind k v (bstInsert newK newV l) r
+  | newK > k = Bind k v l $ bstInsert newK newV r
+  | otherwise = error "Tree error out"
+bstInsert k v Emp = Bind k v Emp Emp
+
 
 -- When you are done, your code should satisfy the following QC properties.
 
@@ -112,7 +118,6 @@ prop_insert_map = forAll (listOf genBSTadd) $ \ops ->
 -- >>> quickCheck prop_insert_map
 -- +++ OK, passed 100 tests.
 
-
 ---------------------------------------------------------------------------------------------------
 -- | (b) Deletion
 --   Write a function `bstDelete k t` that removes the key `k` from the tree `t` 
@@ -121,7 +126,32 @@ prop_insert_map = forAll (listOf genBSTadd) $ \ops ->
 ---------------------------------------------------------------------------------------------------
 
 bstDelete :: (Ord k) => k -> BST k v -> BST k v
-bstDelete = error "fill this in"
+bstDelete delK t@(Bind k _ Emp Emp)
+  | delK == k = Emp
+  | otherwise = t
+bstDelete delK t@(Bind k v l Emp)
+  | delK == k = l
+  | delK < k = Bind k v (bstDelete delK l) Emp
+  | otherwise = t
+bstDelete delK t@(Bind k v Emp r)
+  | delK == k = r
+  | delK > k = Bind k v Emp $ bstDelete delK r
+  | otherwise = t
+bstDelete delK (Bind k v l r) 
+  | delK < k = Bind k v (bstDelete delK l) r
+  | delK > k = Bind k v l $ bstDelete delK r
+  | delK == k = Bind minK minV l newR
+              where Just (minK, minV) = findMinKey r
+                    newR = bstDelete minK r
+bstDelete _ Emp = Emp
+
+
+-- Helper: find left most key,value
+findMinKey :: (Ord k) => BST k v -> Maybe (k, v)
+findMinKey Emp = Nothing
+findMinKey (Bind k v Emp _) = Just (k, v)
+findMinKey (Bind _ _ l _) = findMinKey l
+
 
 -- When you are done, your code should satisfy the following QC properties.
 
@@ -165,7 +195,28 @@ isBal Emp            = True
 
 -- | Write a balanced tree generator
 genBal :: Gen (BST Int Char)
-genBal = error "fill this in"
+genBal = do {
+    n <- choose (1, 200);
+    genBal' 0 $ n - 1;
+}
+
+genBal' :: Int -> Int -> Gen (BST Int Char)
+genBal' lo hi 
+  | lo > hi = return Emp
+  | otherwise = do 
+                  nc <- choose (0, 255)
+                  let half = lo + ((hi - lo) `div` 2)
+                      v = toEnum nc
+                  left <- genBal' lo (half - 1)
+                  right <- genBal' (half + 1) hi
+                  return $ Bind half v left right;
+
+countNum :: BST k v -> Int
+countNum Emp = 0
+countNum (Bind _ _ Emp Emp) = 1
+countNum (Bind _ _ l Emp) = 1 + countNum l
+countNum (Bind _ _ Emp r) = 1 + countNum r
+countNum (Bind _ _ l r) = 1 + (countNum l) + (countNum r)
 
 -- such that
 prop_genBal :: Property
@@ -173,8 +224,7 @@ prop_genBal = forAll genBal isBal
 
 -- >>> quickCheck prop_genBal
 -- +++ OK, passed 100 tests.
-
-
+ 
 ---------------------------------------------------------------------------------------------------
 -- | (d) Height Balancing (** HARD: EXTRA CREDIT see [NOTE:Balancing] below  **) 
 ---------------------------------------------------------------------------------------------------
