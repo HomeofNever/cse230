@@ -82,8 +82,60 @@ printString msg = do
 
 
 evalS :: (MonadWhile m) => Statement -> m ()
-evalS = error "fill this in"
+evalS w@(While e s) = do
+                        cond <- eval e 
+                        case cond of 
+                          BoolVal True -> evalS s >> evalS w
+                          BoolVal False -> evalS Skip
+                          otherwise -> do throwError $ IntVal 2-- Error While Cond is not Bool!
+evalS Skip = return ()
+evalS (Sequence s1 s2) = evalS s1 >> evalS s2
+evalS (Assign x e) = do
+                      res <- eval e
+                      writeVar x res
+evalS (If e s1 s2) = do
+                      cond <- eval e
+                      case cond of 
+                        BoolVal True -> evalS s1
+                        BoolVal False -> evalS s2
+                        otherwise -> do throwError $ IntVal 2 -- Error If Cond: Not BoolVar
+evalS (Print s e) = do
+                      res <- eval e
+                      printString $ s ++ show res
+evalS (Throw e) = do
+                    res <- eval e
+                    throwError res
+evalS (Try s x h) = do 
+                    let handler err = do
+                                        writeVar x err
+                                        evalS h
+                    catchError (evalS s) handler
 
+
+eval :: (MonadWhile m) => Expression -> m Value
+eval (Var x) = do readVar x
+eval (Val x) = return x 
+eval (Op o e1 e2) = do
+                      v1 <- eval e1
+                      v2 <- eval e2
+                      semantics o v1 v2          
+
+semantics :: (MonadWhile m) => Bop -> Value -> Value -> m Value
+semantics Plus (IntVal i1) (IntVal i2) = return $ IntVal $ i1 + i2
+semantics Minus (IntVal i1) (IntVal i2) = return $ IntVal $ i1 - i2
+semantics Times (IntVal i1) (IntVal i2) = return $ IntVal $ i1 * i2
+semantics Divide (IntVal i1) (IntVal i2)
+  | i2 == 0 = do
+                -- divided by 0
+                throwError $ IntVal 1
+  | otherwise = return $ IntVal $ i1 `div` i2
+semantics Gt (IntVal i1) (IntVal i2) = return $ BoolVal $ i1 > i2
+semantics Ge (IntVal i1) (IntVal i2) = return $ BoolVal $ i1 >= i2
+semantics Lt (IntVal i1) (IntVal i2) = return $ BoolVal $ i1 < i2
+semantics Le (IntVal i1) (IntVal i2) = return $ BoolVal $ i1 <= i2
+semantics _ _ _ = do
+                    -- type mismatch
+                    throwError $ IntVal 2
 --------------------------------------------------------------------------
 -- | Next, we will implement a *concrete instance* of a monad `m` that
 --   satisfies the constraints of MonadWhile:
@@ -96,7 +148,7 @@ type Eval a = ExceptT Value (StateT WState (Identity)) a
 --   a starting `WState`. You can read the docs for `runState` and `runExceptT` 
 --------------------------------------------------------------------------
 runEval :: Eval a -> WState -> (Either Value a, WState)
-runEval act s = error "fill this in"
+runEval act s = runState (runExceptT act) s
 
 {- | `execute sto stmt` returns a triple `(sto', exn, log)` where
       * `st'` is the output state,
